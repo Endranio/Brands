@@ -13,13 +13,11 @@ export default async function AuthLayout(props: {
   const clerkLocale =
     ClerkLocalizations.supportedLocales[locale] ?? ClerkLocalizations.defaultLocale;
   let signInUrl = '/sign-in';
-  let signUpUrl = '/sign-up';
   let dashboardUrl = '/dashboard';
   let afterSignOutUrl = '/';
 
   if (locale !== routing.defaultLocale) {
     signInUrl = `/${locale}${signInUrl}`;
-    signUpUrl = `/${locale}${signUpUrl}`;
     dashboardUrl = `/${locale}${dashboardUrl}`;
     afterSignOutUrl = `/${locale}${afterSignOutUrl}`;
   }
@@ -27,13 +25,28 @@ export default async function AuthLayout(props: {
   return (
     <ClerkProvider
       appearance={{
-        cssLayerName: 'clerk', // Ensure Clerk is compatible with Tailwind CSS v4
+        cssLayerName: 'clerk',
+        variables: {
+          colorPrimary: '#111111', // ink
+          colorBackground: '#ffffff', // canvas
+          colorInputBackground: '#f5f5f5', // soft-cloud
+          colorText: '#111111', // ink
+          borderRadius: '0px', // square cards & inputs
+          fontFamily: 'var(--font-inter), system-ui, sans-serif',
+        },
+        elements: {
+          card: 'shadow-none border border-hairline-soft rounded-none',
+          formButtonPrimary: 'rounded-full bg-[#111] text-white hover:bg-[#333]',
+          socialButtons: 'hidden',
+          socialButtonsBlockButtonArrow: 'hidden',
+          dividerRow: 'hidden',
+          footer: 'hidden',
+          footerAction: 'hidden',
+        },
       }}
       localization={clerkLocale}
       signInUrl={signInUrl}
-      signUpUrl={signUpUrl}
       signInFallbackRedirectUrl={dashboardUrl}
-      signUpFallbackRedirectUrl={dashboardUrl}
       afterSignOutUrl={afterSignOutUrl}
     >
       {props.children}

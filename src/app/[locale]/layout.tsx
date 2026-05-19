@@ -1,9 +1,24 @@
 import type { Metadata, Viewport } from 'next';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
+import { Bebas_Neue, Inter } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { routing } from '@/libs/I18nRouting';
 import '@/styles/global.css';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  weight: ['400', '500', '700'],
+  display: 'swap',
+});
+
+const bebasNeue = Bebas_Neue({
+  subsets: ['latin'],
+  variable: '--font-bebas-neue',
+  weight: ['400'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   icons: [
@@ -52,8 +67,8 @@ export default async function RootLayout(props: {
   setRequestLocale(locale);
 
   return (
-    <html lang={locale}>
-      <body>
+    <html lang={locale} className={`${inter.variable} ${bebasNeue.variable}`}>
+      <body className="text-body-md bg-canvas font-sans text-ink antialiased">
         <NextIntlClientProvider>{props.children}</NextIntlClientProvider>
       </body>
     </html>

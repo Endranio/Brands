@@ -1,7 +1,7 @@
-import { SignOutButton } from '@clerk/nextjs';
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Link } from '@/libs/I18nNavigation';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -24,32 +24,14 @@ export async function generateMetadata(props: DashboardLayoutProps): Promise<Met
 export default async function DashboardLayout(props: DashboardLayoutProps) {
   const { locale } = await props.params;
   setRequestLocale(locale);
-  const t = await getTranslations({
-    locale,
-    namespace: 'DashboardLayout',
-  });
 
   return (
-    <div className="min-h-screen">
-      <nav className="flex items-center justify-between border-b p-4">
-        <ul className="flex gap-4">
-          <li>
-            <Link href="/dashboard/" className="text-gray-700 hover:text-gray-900">
-              {t('dashboard_link')}
-            </Link>
-          </li>
-        </ul>
-        <ul className="flex gap-4">
-          <li>
-            <SignOutButton>
-              <button className="text-gray-700 hover:text-gray-900" type="button">
-                {t('sign_out')}
-              </button>
-            </SignOutButton>
-          </li>
-        </ul>
-      </nav>
-      <main className="p-4">{props.children}</main>
+    <div className="flex min-h-screen bg-soft-cloud">
+      <DashboardSidebar />
+      <div className="flex flex-1 flex-col pb-[60px] md:pb-0">
+        <DashboardHeader />
+        <main className="flex-1 p-[16px] md:p-[32px]">{props.children}</main>
+      </div>
     </div>
   );
 }

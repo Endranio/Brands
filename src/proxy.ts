@@ -7,12 +7,7 @@ const handleI18nRouting = createMiddleware(routing);
 
 const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/:locale/dashboard(.*)']);
 
-const isAuthPage = createRouteMatcher([
-  '/sign-in(.*)',
-  '/:locale/sign-in(.*)',
-  '/sign-up(.*)',
-  '/:locale/sign-up(.*)',
-]);
+const isAuthPage = createRouteMatcher(['/sign-in(.*)', '/:locale/sign-in(.*)']);
 
 export default async function proxy(request: NextRequest, event: NextFetchEvent) {
   // Clerk keyless mode doesn't work with i18n, this is why we need to run the middleware conditionally
