@@ -316,6 +316,7 @@ export function ProductDetail(props: Props) {
         <p
           className="text-heading-lg mt-[12px] animate-fade-in-up font-semibold text-primary"
           style={{ animationDelay: '150ms' }}
+          suppressHydrationWarning
         >
           {formattedPrice}
         </p>

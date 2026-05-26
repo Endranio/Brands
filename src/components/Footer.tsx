@@ -1,6 +1,15 @@
+import { eq } from 'drizzle-orm';
 import Link from 'next/link';
+import { db } from '@/libs/DB';
+import { landingContentsSchema } from '@/models/Schema';
 
-export function Footer() {
+export async function Footer() {
+  const landingContent = await db
+    .select()
+    .from(landingContentsSchema)
+    .where(eq(landingContentsSchema.isActive, true))
+    .limit(1);
+  const instagramUrl = landingContent[0]?.instagramUrl ?? 'https://instagram.com/anpm.official';
   const year = new Date().getFullYear();
 
   return (
@@ -20,7 +29,7 @@ export function Footer() {
             {/* Social */}
             <div className="flex items-center gap-[16px] pt-[4px]">
               <Link
-                href="https://instagram.com/anpm.official"
+                href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-[36px] w-[36px] items-center justify-center text-mute transition-colors hover:text-ink"
@@ -98,7 +107,7 @@ export function Footer() {
                   Tentang Kami
                 </Link>
                 <Link
-                  href="https://instagram.com/anpm.official"
+                  href={instagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-caption-md text-mute transition-colors hover:text-ink"

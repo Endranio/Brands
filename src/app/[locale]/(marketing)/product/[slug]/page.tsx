@@ -49,8 +49,19 @@ export default async function ProductPage(props: Props) {
           price: productData.price,
           description: productData.description,
         }}
-        images={productData.images}
-        variants={productData.variants}
+        images={productData.images.map((img) => ({
+          id: img.id,
+          imageUrl: img.imageUrl,
+          altText: img.altText,
+          sortOrder: img.sortOrder,
+        }))}
+        variants={productData.variants.map((v) => ({
+          id: v.id,
+          size: v.size,
+          color: v.color,
+          stock: v.stock,
+          price: v.price,
+        }))}
       />
     </main>
   );
