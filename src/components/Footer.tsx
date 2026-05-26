@@ -11,7 +11,7 @@ export function Footer() {
           {/* Brand */}
           <div className="flex max-w-[320px] flex-col gap-[16px]">
             <h3 className="text-[20px] font-extrabold tracking-[-0.04em] text-ink uppercase">
-              ANPM
+              AMPM
             </h3>
             <p className="text-body-md leading-relaxed text-mute">
               Clothing brand berbasis di Indonesia. Koleksi apparel dengan material premium dan
@@ -116,7 +116,7 @@ export function Footer() {
           style={{ borderTop: '1px solid var(--color-hairline-soft)' }}
         >
           <p className="text-utility-xs text-mute">
-            &copy; {year} ANPM Clothing Brand. Hak cipta dilindungi undang-undang.
+            &copy; {year} AMPM Clothing Brand. Hak cipta dilindungi undang-undang.
           </p>
           <div className="flex gap-[20px]">
             <Link href="#" className="text-utility-xs text-mute transition-colors hover:text-ink">

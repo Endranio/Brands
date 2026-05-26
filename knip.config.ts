@@ -2,12 +2,7 @@ import type { KnipConfig } from 'knip';
 
 const config: KnipConfig = {
   // Files to exclude from Knip analysis
-  ignore: [
-    'src/libs/I18n.ts',
-    'src/types/I18n.ts',
-    'src/libs/I18nNavigation.ts',
-    'src/validations/schemas.ts',
-  ],
+  ignore: ['src/libs/I18n.ts', 'src/types/I18n.ts', 'src/libs/I18nNavigation.ts'],
   ignoreExportsUsedInFile: true,
   // Dependencies to ignore during analysis
   ignoreDependencies: [

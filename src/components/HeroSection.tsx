@@ -13,9 +13,14 @@ export function HeroSection(props: HeroSectionProps) {
   // Fallback hero when no content is configured
   if (!props.imageUrl && !props.title) {
     return (
-      <section className="relative flex w-full flex-col items-center justify-center bg-soft-cloud py-[120px] md:py-[160px]">
-        <h1 className="text-display-campaign text-ink">ANPM</h1>
-        <p className="text-heading-lg mt-[16px] text-mute">Koleksi Segera Hadir</p>
+      <section className="relative flex w-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-soft-cloud to-[#e2e8f0] py-[120px] md:py-[160px]">
+        <h1 className="text-display-campaign relative z-10 animate-fade-in-up text-ink">AMPM</h1>
+        <p
+          className="text-heading-lg relative z-10 mt-[16px] animate-fade-in-up text-mute"
+          style={{ animationDelay: '100ms', opacity: 0, animationFillMode: 'forwards' }}
+        >
+          Koleksi Segera Hadir
+        </p>
       </section>
     );
   }
@@ -23,15 +28,26 @@ export function HeroSection(props: HeroSectionProps) {
   // Hero with title only (no image) — styled with ink background
   if (!props.imageUrl && props.title) {
     return (
-      <section className="relative flex w-full items-end bg-ink py-[80px] md:py-[120px]">
-        <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-[12px] px-[16px] md:px-[40px]">
-          <h1 className="text-display-campaign max-w-[800px] text-on-primary">{props.title}</h1>
+      <section className="relative flex w-full items-end overflow-hidden bg-gradient-to-br from-ink to-charcoal py-[80px] md:py-[120px]">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+        <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-col gap-[12px] px-[16px] md:px-[40px]">
+          <h1 className="text-display-campaign max-w-[800px] animate-fade-in-up text-on-primary">
+            {props.title}
+          </h1>
           {props.subtitle && (
-            <p className="text-heading-lg mt-[8px] max-w-[560px] text-stone">{props.subtitle}</p>
+            <p
+              className="text-heading-lg mt-[8px] max-w-[560px] animate-fade-in-up text-stone"
+              style={{ animationDelay: '100ms', opacity: 0, animationFillMode: 'forwards' }}
+            >
+              {props.subtitle}
+            </p>
           )}
           {props.ctaText && (
-            <div className="mt-[24px]">
-              <Link href={props.ctaLink ?? '#products'} className="button-outline-on-image">
+            <div
+              className="mt-[32px] animate-fade-in-up"
+              style={{ animationDelay: '200ms', opacity: 0, animationFillMode: 'forwards' }}
+            >
+              <Link href={props.ctaLink ?? '#products'} className="button-primary">
                 {props.ctaText}
               </Link>
             </div>
@@ -44,43 +60,52 @@ export function HeroSection(props: HeroSectionProps) {
   // Full hero with background image
   return (
     <section
-      className="relative flex w-full items-end overflow-hidden"
-      style={{ minHeight: '75vh' }}
+      className="group relative flex w-full items-end overflow-hidden"
+      style={{ minHeight: '80vh' }}
     >
       {/* Background Image */}
       {props.imageUrl && (
         <Image
           src={props.imageUrl}
-          alt={props.title ?? 'ANPM Campaign'}
+          alt={props.title ?? 'AMPM Campaign'}
           fill
           priority
-          className="object-cover"
+          className="object-cover transition-transform duration-[20s] ease-out group-hover:scale-110"
           sizes="100vw"
         />
       )}
 
-      {/* Gradient overlay for text readability */}
+      {/* Modern gradient overlay for text readability + depth */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.25) 40%, transparent 65%)',
+            'linear-gradient(to top, rgba(0,0,30,0.85) 0%, rgba(0,0,30,0.4) 40%, transparent 70%)',
         }}
       />
+      <div className="absolute inset-0 bg-gradient-to-r from-ink/30 to-transparent"></div>
 
-      {/* Content lockup — anchored bottom-left per DESIGN.md campaign-tile */}
-      <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-col gap-[12px] px-[16px] pb-[56px] md:px-[40px] md:pb-[72px]">
+      {/* Content lockup */}
+      <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-col gap-[12px] px-[16px] pb-[64px] md:px-[40px] md:pb-[80px]">
         {props.title && (
-          <h1 className="text-display-campaign max-w-[800px] text-canvas">{props.title}</h1>
+          <h1 className="text-display-campaign max-w-[800px] animate-fade-in-up text-canvas">
+            {props.title}
+          </h1>
         )}
         {props.subtitle && (
-          <p className="text-body-md mt-[4px] max-w-[480px] leading-relaxed text-canvas/80">
+          <p
+            className="text-heading-lg mt-[4px] max-w-[500px] animate-fade-in-up leading-relaxed text-canvas/90"
+            style={{ animationDelay: '150ms', opacity: 0, animationFillMode: 'forwards' }}
+          >
             {props.subtitle}
           </p>
         )}
         {props.ctaText && (
-          <div className="mt-[24px]">
-            <Link href={props.ctaLink ?? '#products'} className="button-outline-on-image">
+          <div
+            className="mt-[32px] animate-fade-in-up"
+            style={{ animationDelay: '300ms', opacity: 0, animationFillMode: 'forwards' }}
+          >
+            <Link href={props.ctaLink ?? '#products'} className="button-primary shadow-xl">
               {props.ctaText}
             </Link>
           </div>

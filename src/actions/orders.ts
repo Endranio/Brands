@@ -1,6 +1,6 @@
 'use server';
 
-import { and, count, eq, ilike, or } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, or } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/libs/DB';
 import { Env } from '@/libs/Env';
@@ -14,7 +14,7 @@ import { orderFormSchema } from '@/validations/schemas';
 import type { OrderFormValues } from '@/validations/schemas';
 
 /**
- * Generate a unique order number (format: ANPM-YYYYMMDD-XXXX).
+ * Generate a unique order number (format: AMPM-YYYYMMDD-XXXX).
  *
  * @returns A unique order number string
  */
@@ -26,7 +26,7 @@ async function generateOrderNumber(): Promise<string> {
 
   while (!unique) {
     const randomCode = Math.floor(1000 + Math.random() * 9000).toString();
-    orderNumber = `ANPM-${dateStr}-${randomCode}`;
+    orderNumber = `AMPM-${dateStr}-${randomCode}`;
 
     const existing = await db
       .select({ id: ordersSchema.id })
@@ -211,7 +211,7 @@ export async function getOrders(params: GetOrdersParams = {}) {
       .where(whereCondition)
       .limit(limit)
       .offset(offset)
-      .orderBy(ordersSchema.createdAt),
+      .orderBy(desc(ordersSchema.createdAt)),
     db.select({ value: count() }).from(ordersSchema).where(whereCondition),
   ]);
 

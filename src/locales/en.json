@@ -5,8 +5,8 @@
     "sign_up_link": "Sign up"
   },
   "Index": {
-    "meta_title": "ANPM — Clothing Brand",
-    "meta_description": "Temukan koleksi terbaru ANPM. Belanja langsung dari website resmi kami."
+    "meta_title": "AMPM — Clothing Brand",
+    "meta_description": "Temukan koleksi terbaru AMPM. Belanja langsung dari website resmi kami."
   },
   "SignIn": {
     "meta_title": "Sign in",
@@ -21,7 +21,7 @@
   },
   "DashboardLayout": {
     "meta_title": "Dashboard",
-    "meta_description": "Admin dashboard for managing ANPM.",
+    "meta_description": "Admin dashboard for managing AMPM.",
     "dashboard_link": "Dashboard",
     "sign_out": "Sign out"
   }

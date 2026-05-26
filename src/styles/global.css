@@ -4,12 +4,13 @@
 
 @theme {
   /* Colors — DESIGN.md tokens */
-  --color-primary: #111111;
+  --color-primary: #0000a0;
+  --color-primary-light: #2020e5;
   --color-on-primary: #ffffff;
   --color-canvas: #ffffff;
-  --color-soft-cloud: #f5f5f5;
-  --color-ink: #111111;
-  --color-charcoal: #39393b;
+  --color-soft-cloud: #f2f5fb;
+  --color-ink: #000033;
+  --color-charcoal: #1a1a4b;
   --color-ash: #4b4b4d;
   --color-mute: #707072;
   --color-stone: #9e9ea0;
@@ -17,6 +18,7 @@
   --color-hairline-soft: #e5e5e5;
   --color-sale: #d30005;
   --color-success: #007d48;
+  --color-brand: #0000a0;
 
   /* Spacing — 8px base grid */
   --spacing-xxs: 2px;
@@ -28,16 +30,68 @@
   --spacing-xxl: 30px;
   --spacing-section: 48px;
 
-  /* Border Radius — pill geometry */
+  /* Border Radius */
   --radius-none: 0px;
-  --radius-sm: 18px;
-  --radius-md: 24px;
-  --radius-lg: 30px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
   --radius-full: 9999px;
 
-  /* Fonts (mapped from layout.tsx next/font variables) */
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 51 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 51 / 0.1), 0 2px 4px -2px rgb(0 0 51 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 51 / 0.1), 0 4px 6px -4px rgb(0 0 51 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 51 / 0.1), 0 8px 10px -6px rgb(0 0 51 / 0.1);
+  --shadow-glow: 0 0 15px 0 rgba(0, 0, 160, 0.4);
+
+  /* Fonts */
   --font-sans: var(--font-inter);
   --font-display: var(--font-bebas-neue);
+
+  /* Animations */
+  --animate-fade-in-up: fadeInUp 0.5s ease-out forwards;
+  --animate-fade-in: fadeIn 0.4s ease-out forwards;
+  --animate-scale-in: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-shimmer: shimmer 2s linear infinite;
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
 }
 
 /* ───────── Base resets ───────── */
@@ -157,7 +211,7 @@
     gap: 8px;
     height: 48px;
     padding: 0 32px;
-    background-color: var(--color-ink);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
     color: var(--color-on-primary);
     border-radius: 9999px;
     font-family: var(--font-sans), system-ui, sans-serif;
@@ -168,13 +222,20 @@
     white-space: nowrap;
     cursor: pointer;
     border: none;
+    box-shadow: var(--shadow-sm);
     transition:
-      transform 0.15s ease,
-      opacity 0.15s ease;
+      transform 0.2s ease,
+      box-shadow 0.2s ease,
+      opacity 0.2s ease;
+  }
+  .button-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow);
   }
   .button-primary:active {
-    transform: scale(0.96);
-    opacity: 0.7;
+    transform: scale(0.97) translateY(0);
+    box-shadow: none;
+    opacity: 0.9;
   }
 
   .button-secondary {
@@ -184,32 +245,6 @@
     gap: 8px;
     height: 48px;
     padding: 0 32px;
-    background-color: var(--color-soft-cloud);
-    color: var(--color-ink);
-    border-radius: 9999px;
-    font-family: var(--font-sans), system-ui, sans-serif;
-    font-size: 16px;
-    font-weight: 500;
-    line-height: 1;
-    text-decoration: none;
-    white-space: nowrap;
-    cursor: pointer;
-    border: none;
-    transition:
-      transform 0.15s ease,
-      opacity 0.15s ease;
-  }
-  .button-secondary:active {
-    transform: scale(0.96);
-    opacity: 0.7;
-  }
-
-  .button-outline-on-image {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 14px 28px;
     background-color: var(--color-canvas);
     color: var(--color-ink);
     border-radius: 9999px;
@@ -220,14 +255,53 @@
     text-decoration: none;
     white-space: nowrap;
     cursor: pointer;
-    border: none;
+    border: 1px solid var(--color-hairline);
     transition:
-      transform 0.15s ease,
-      opacity 0.15s ease;
+      transform 0.2s ease,
+      background-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  .button-secondary:hover {
+    background-color: var(--color-soft-cloud);
+    box-shadow: var(--shadow-sm);
+  }
+  .button-secondary:active {
+    transform: scale(0.97);
+    background-color: var(--color-hairline-soft);
+  }
+
+  .button-outline-on-image {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    color: var(--color-ink);
+    border-radius: 9999px;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    border: none;
+    box-shadow: var(--shadow-sm);
+    transition:
+      transform 0.2s ease,
+      background-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  .button-outline-on-image:hover {
+    transform: translateY(-2px);
+    background-color: var(--color-canvas);
+    box-shadow: var(--shadow-md);
   }
   .button-outline-on-image:active {
-    transform: scale(0.96);
-    opacity: 0.7;
+    transform: scale(0.97);
+    box-shadow: none;
   }
 
   /* ───────── Size pill (filter-chip pattern) ───────── */
@@ -273,8 +347,10 @@
     align-items: center;
     height: 48px;
     border: 1px solid var(--color-hairline);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-md);
     overflow: hidden;
+    background-color: var(--color-canvas);
+    box-shadow: var(--shadow-sm);
   }
   .qty-stepper button {
     display: flex;
@@ -287,7 +363,7 @@
     color: var(--color-ink);
     font-size: 20px;
     cursor: pointer;
-    transition: background-color 0.1s ease;
+    transition: background-color 0.2s ease;
   }
   .qty-stepper button:hover:not(:disabled) {
     background-color: var(--color-soft-cloud);
@@ -303,5 +379,31 @@
     font-size: 16px;
     color: var(--color-ink);
     user-select: none;
+  }
+
+  /* ───────── New Modern Utilities ───────── */
+  .glass {
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .glass-dark {
+    background-color: rgba(0, 0, 51, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .card-elevated {
+    border-radius: var(--radius-lg);
+    background-color: var(--color-canvas);
+    box-shadow: var(--shadow-sm);
+    transition:
+      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card-elevated:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
   }
 }

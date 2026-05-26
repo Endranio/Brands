@@ -181,9 +181,24 @@ export function OrderTable(tableProps: Props) {
                     onClick={async () => {
                       await handleOpenDetail(order.id);
                     }}
-                    className="cursor-pointer text-[14px] font-medium text-ink underline underline-offset-2 hover:text-black"
+                    className="cursor-pointer text-ink transition-colors hover:text-stone"
+                    aria-label="Detail"
+                    title="Detail"
                   >
-                    Detail
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
                   </button>
                 </td>
               </tr>

@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { deleteProduct } from '@/actions/products';
 
 type Product = {
@@ -56,14 +58,20 @@ function StatusBadge(badgeProps: { status: string }) {
 }
 
 export function ProductTable(tableProps: Props) {
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   async function handleDelete(id: string, name: string) {
-    // eslint-disable-next-line no-alert
-    const confirmed = window.confirm(`Hapus produk "${name}"? Aksi ini tidak bisa dibatalkan.`);
-    if (!confirmed) {
-      return;
+    try {
+      setIsDeleting(true);
+      await deleteProduct(id);
+      toast.success(`Produk "${name}" berhasil dihapus.`);
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to delete product:', error);
+      setIsDeleting(false);
+      toast.error('Gagal menghapus produk.');
     }
-    await deleteProduct(id);
-    window.location.reload();
   }
 
   if (tableProps.products.length === 0) {
@@ -117,18 +125,47 @@ export function ProductTable(tableProps: Props) {
                 <div className="flex justify-end gap-[8px]">
                   <Link
                     href={`/${tableProps.locale}/dashboard/products/${product.id}/edit`}
-                    className="text-[14px] text-ink underline-offset-2 hover:underline"
+                    className="text-ink transition-colors hover:text-stone"
+                    aria-label="Edit"
+                    title="Edit"
                   >
-                    Edit
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                    </svg>
                   </Link>
                   <button
                     type="button"
-                    onClick={async () => {
-                      await handleDelete(product.id, product.name);
+                    onClick={() => {
+                      setConfirmingId(product.id);
                     }}
-                    className="text-[14px] text-sale"
+                    className="text-sale transition-colors hover:opacity-80"
+                    aria-label="Hapus"
+                    title="Hapus"
                   >
-                    Hapus
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
                   </button>
                 </div>
               </td>
@@ -136,6 +173,47 @@ export function ProductTable(tableProps: Props) {
           ))}
         </tbody>
       </table>
+
+      {confirmingId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-[16px] backdrop-blur-sm">
+          <div
+            className="flex w-full max-w-[400px] flex-col gap-[16px] bg-canvas p-[24px] shadow-xl"
+            style={{ border: '1px solid var(--color-hairline-soft)' }}
+          >
+            <h3 className="text-heading-md text-ink">Hapus Produk?</h3>
+            <p className="text-body-md text-mute">
+              Apakah Anda yakin ingin menghapus produk ini? Produk yang sudah dihapus tidak dapat
+              ditampilkan lagi (soft delete).
+            </p>
+            <div className="mt-[8px] flex justify-end gap-[12px]">
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmingId(null);
+                }}
+                disabled={isDeleting}
+                className="button-secondary px-[16px] py-[8px]"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const p = tableProps.products.find((x) => x.id === confirmingId);
+                  if (p) {
+                    await handleDelete(p.id, p.name);
+                    setConfirmingId(null);
+                  }
+                }}
+                disabled={isDeleting}
+                className="button-primary bg-sale px-[16px] py-[8px] hover:bg-[#991b1b] disabled:opacity-50"
+              >
+                {isDeleting ? 'Menghapus...' : 'Hapus Produk'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

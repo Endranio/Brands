@@ -30,3 +30,26 @@ export const orderFormSchema = zod.object({
 });
 
 export type OrderFormValues = z.infer<typeof orderFormSchema>;
+
+export const variantSchema = zod.object({
+  productId: zod.uuid({ message: 'Product ID tidak valid' }),
+  size: zod.string().min(1, 'Ukuran wajib diisi'),
+  color: zod.string().optional(),
+  stock: zod.coerce.number().min(0, 'Stok tidak boleh negatif'),
+  price: zod.preprocess(
+    (val) => (val === '' || val === undefined || val === null ? undefined : Number(val)),
+    zod.number().min(0, 'Harga tidak boleh negatif').optional(),
+  ),
+});
+
+export type VariantFormValues = z.infer<typeof variantSchema>;
+
+export const signInSchema = zod.object({
+  email: zod
+    .string()
+    .min(1, 'Email wajib diisi')
+    .regex(/^[^@]+@[^@]+\.[^@]+$/u, 'Format email tidak valid'),
+  password: zod.string().min(1, 'Password wajib diisi'),
+});
+
+export type SignInFormValues = z.infer<typeof signInSchema>;

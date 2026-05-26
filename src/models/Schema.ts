@@ -43,6 +43,7 @@ export const productsSchema = pgTable('products', {
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
+  deletedAt: timestamp('deleted_at', { mode: 'date' }),
 });
 
 export const productImagesSchema = pgTable('product_images', {
@@ -70,6 +71,7 @@ export const productVariantsSchema = pgTable('product_variants', {
   size: text('size').notNull(),
   color: text('color'),
   stock: integer('stock').notNull().default(0),
+  price: integer('price'),
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' })

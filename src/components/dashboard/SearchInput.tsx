@@ -23,7 +23,7 @@ export function SearchInput() {
         params.delete('q');
       }
       params.delete('page');
-      router.push(`?${params.toString()}`);
+      router.push(`?${params.toString()}`, { scroll: false });
     }, 300);
   }
 

@@ -3,6 +3,7 @@ import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { Bebas_Neue, Inter } from 'next/font/google';
 import { notFound } from 'next/navigation';
+import { Toaster } from 'sonner';
 import { routing } from '@/libs/I18nRouting';
 import '@/styles/global.css';
 
@@ -70,6 +71,7 @@ export default async function RootLayout(props: {
     <html lang={locale} className={`${inter.variable} ${bebasNeue.variable}`}>
       <body className="text-body-md bg-canvas font-sans text-ink antialiased">
         <NextIntlClientProvider>{props.children}</NextIntlClientProvider>
+        <Toaster richColors position="top-center" />
       </body>
     </html>
   );

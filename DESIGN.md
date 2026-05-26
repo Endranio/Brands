@@ -2,7 +2,7 @@
 version: alpha
 name: Nike
 description: |
-  A photography-first commerce system built on extreme typographic contrast — towering uppercase Futura display lockups burned into editorial campaign imagery, sitting above a dense, neutral, near-monochrome retail chrome of pill-shaped black CTAs, gray search and tag pills, and tight 8px-grid product cards. The brand's voice is athletic, kinetic, and absolute: pure black, pure white, a single soft surface gray, and a deliberately small set of semantic accents (sale red, success green, restrained category tints) — every chromatic moment is reserved for editorial photography or pricing signal, never decorative chrome.
+  A photography-first commerce system built on extreme typographic contrast — towering uppercase Futura display lockups burned into editorial campaign imagery, sitting above a dense, neutral, crisp retail chrome of pill-shaped CTAs, soft gray search and tag pills, and tight 8px-grid product cards. The brand's voice is athletic, kinetic, and absolute: bold blue, pure white, a single soft surface gray, and a deliberately small set of semantic accents (sale red, success green, restrained category tints) — every chromatic moment is reserved for editorial photography or pricing signal, anchored by the primary blue (#0000A0) theme.
 
 colors:
   primary: "#111111"
@@ -268,7 +268,7 @@ Across `/men`, the trail-running listing, the Zegama PDP, `/membership`, and Jor
 
 **Key Characteristics:**
 - Editorial campaign hero with `{typography.display-campaign}` (Nike Futura ND, 96px, line-height 0.9, uppercase) burned directly into full-bleed photography
-- Pure black/white/single-gray UI palette: `{colors.ink}`, `{colors.canvas}`, and `{colors.soft-cloud}` carry ~95% of the chrome surface area
+- Bold blue/white/single-gray UI palette: `{colors.primary}` (#0000A0), `{colors.canvas}`, and `{colors.soft-cloud}` carry ~95% of the chrome surface area
 - Pill geometry everywhere: every CTA, search field, filter chip, and badge uses `{rounded.full}` (30px) or `{rounded.md}` (24px) — there are no sharp-cornered buttons in the system
 - Product cards have zero radius, zero shadow, sit directly on `{colors.soft-cloud}` swatch backgrounds — the photograph is the card
 - Two-tone CTA hierarchy: `{component.button-primary}` (black on anything light) versus `{component.button-secondary}` (`{colors.soft-cloud}` on anything bright) — never both at once on the same surface
@@ -280,8 +280,9 @@ Across `/men`, the trail-running listing, the Zegama PDP, `/membership`, and Jor
 > **Source pages:** `/men` (primary), `/w/mens-acg-trail-running-shoes-…`, `/t/acg-zegama-…`, `/membership`, `/w/jordan-golf-…`. The chrome palette is identical across all five — only photography varies.
 
 ### Brand & Accent
-- **Nike Black** (`{colors.ink}` — `#111111`): The brand's only "color." It is the primary CTA, the swatch dot, the active filter chip, the campaign overlay, the headline color, and the body text. When Nike wants to assert anything, it goes black.
-- **Pure White** (`{colors.on-primary}`, `{colors.canvas}` — `#ffffff`): Equal partner to black. Carries every page background, the on-image CTA, and the inverse text on `{colors.ink}` surfaces.
+- **Nike Blue** (`{colors.primary}` — `#0000A0`): The brand's core anchor color. It is the primary CTA, the active filter chip, the campaign overlay, and the primary accent. When the brand wants to assert anything, it goes blue.
+- **Deep Navy Ink** (`{colors.ink}` — `#000033`): The deepest contrast used for text and headlines to maintain the blue-tinted cool aesthetic.
+- **Pure White** (`{colors.on-primary}`, `{colors.canvas}` — `#ffffff`): Equal partner to blue. Carries every page background, the on-image CTA, and the inverse text on `{colors.primary}` surfaces.
 
 ### Surface
 - **Soft Cloud** (`{colors.soft-cloud}` — `#f5f5f5`): The most-used non-white surface in the entire system. Product card image backgrounds, search pill, secondary CTA, utility bar, sport-category swatch tiles. It is the "color" of every product photograph's stage.

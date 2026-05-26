@@ -1,10 +1,17 @@
 'use server';
 
-import { and, count, eq, ilike, or } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, isNull, or } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/libs/DB';
 import { deleteFromImageKit, uploadToImageKit } from '@/libs/ImageKit';
-import { productImagesSchema, productsSchema, productVariantsSchema } from '@/models/Schema';
+import {
+  orderItemsSchema,
+  productImagesSchema,
+  productsSchema,
+  productVariantsSchema,
+} from '@/models/Schema';
+import { variantSchema } from '@/validations/schemas';
+import type { VariantFormValues } from '@/validations/schemas';
 
 /**
  * Safely extract a string value from FormData.
@@ -29,12 +36,16 @@ export async function getProducts(params: GetProductsParams = {}) {
   const limit = params.limit ?? 10;
   const offset = (page - 1) * limit;
 
+  const baseCondition = isNull(productsSchema.deletedAt);
   const searchCondition = params.search
-    ? or(
-        ilike(productsSchema.name, `%${params.search}%`),
-        ilike(productsSchema.slug, `%${params.search}%`),
+    ? and(
+        baseCondition,
+        or(
+          ilike(productsSchema.name, `%${params.search}%`),
+          ilike(productsSchema.slug, `%${params.search}%`),
+        ),
       )
-    : undefined;
+    : baseCondition;
 
   const [data, totalResult] = await Promise.all([
     db
@@ -43,7 +54,7 @@ export async function getProducts(params: GetProductsParams = {}) {
       .where(searchCondition)
       .limit(limit)
       .offset(offset)
-      .orderBy(productsSchema.createdAt),
+      .orderBy(desc(productsSchema.createdAt)),
     db.select({ value: count() }).from(productsSchema).where(searchCondition),
   ]);
 
@@ -58,7 +69,11 @@ export async function getProducts(params: GetProductsParams = {}) {
 }
 
 export async function getProductById(id: string) {
-  const result = await db.select().from(productsSchema).where(eq(productsSchema.id, id)).limit(1);
+  const result = await db
+    .select()
+    .from(productsSchema)
+    .where(and(eq(productsSchema.id, id), isNull(productsSchema.deletedAt)))
+    .limit(1);
 
   if (result.length === 0) {
     return null;
@@ -77,7 +92,13 @@ export async function getProductBySlug(slug: string) {
   const result = await db
     .select()
     .from(productsSchema)
-    .where(and(eq(productsSchema.slug, slug), eq(productsSchema.status, 'active')))
+    .where(
+      and(
+        eq(productsSchema.slug, slug),
+        eq(productsSchema.status, 'active'),
+        isNull(productsSchema.deletedAt),
+      ),
+    )
     .limit(1);
 
   if (result.length === 0 || !result[0]) {
@@ -119,7 +140,7 @@ export async function createProduct(formData: FormData) {
   const description = getStr(formData, 'description');
   const priceStr = getStr(formData, 'price') || '0';
   const status = getStr(formData, 'status') || 'draft';
-  const productImage = formData.get('productImage');
+  const productImages = formData.getAll('productImages');
 
   if (!name) {
     return { success: false, error: 'Nama produk harus diisi.' };
@@ -148,27 +169,27 @@ export async function createProduct(formData: FormData) {
 
   const productId = inserted[0]?.id;
 
-  // Handle product image upload
-  if (productId && productImage instanceof File && productImage.size > 0) {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(productImage.type)) {
-      return {
-        success: true,
-        id: productId,
-        warning: 'Produk dibuat, tapi format gambar tidak valid.',
-      };
+  // Handle product images upload
+  const validFiles = productImages.filter((f): f is File => f instanceof File && f.size > 0);
+  if (productId && validFiles.length > 0) {
+    const allowedTypes = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
+
+    for (let i = 0; i < validFiles.length; i += 1) {
+      const file = validFiles[i];
+      if (!file || !allowedTypes.has(file.type)) {
+        continue;
+      }
+      const buffer = await file.arrayBuffer();
+      const result = await uploadToImageKit(buffer, file.name, '/products');
+
+      await db.insert(productImagesSchema).values({
+        productId,
+        imageUrl: result.url,
+        imageKey: result.fileId,
+        isMain: i === 0,
+        sortOrder: i,
+      });
     }
-
-    const buffer = await productImage.arrayBuffer();
-    const result = await uploadToImageKit(buffer, productImage.name, '/products');
-
-    await db.insert(productImagesSchema).values({
-      productId,
-      imageUrl: result.url,
-      imageKey: result.fileId,
-      isMain: true,
-      sortOrder: 0,
-    });
   }
 
   revalidatePath('/dashboard/products');
@@ -176,13 +197,14 @@ export async function createProduct(formData: FormData) {
   return { success: true, id: productId };
 }
 
+// eslint-disable-next-line complexity
 export async function updateProduct(id: string, formData: FormData) {
   const name = getStr(formData, 'name');
   const slug = getStr(formData, 'slug') || slugify(name);
   const description = getStr(formData, 'description');
   const priceStr = getStr(formData, 'price') || '0';
   const status = getStr(formData, 'status') || 'draft';
-  const productImage = formData.get('productImage');
+  const productImages = formData.getAll('productImages');
 
   if (!name) {
     return { success: false, error: 'Nama produk harus diisi.' };
@@ -209,36 +231,75 @@ export async function updateProduct(id: string, formData: FormData) {
     .set({ name, slug, description, price, status })
     .where(eq(productsSchema.id, id));
 
-  // Handle product image upload
-  if (productImage instanceof File && productImage.size > 0) {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (allowedTypes.includes(productImage.type)) {
-      // Delete old main image if exists
-      const oldImages = await db
-        .select()
-        .from(productImagesSchema)
-        .where(and(eq(productImagesSchema.productId, id), eq(productImagesSchema.isMain, true)))
-        .limit(1);
-
-      if (oldImages[0]?.imageKey) {
-        try {
-          await deleteFromImageKit(oldImages[0].imageKey);
-        } catch {
-          // Ignore deletion errors
-        }
-        await db.delete(productImagesSchema).where(eq(productImagesSchema.id, oldImages[0].id));
+  const keptImageIdsStr = formData.get('keptImageIds');
+  let keptImageIds: string[] = [];
+  if (typeof keptImageIdsStr === 'string') {
+    try {
+      const parsed = JSON.parse(keptImageIdsStr) as unknown;
+      if (Array.isArray(parsed)) {
+        keptImageIds = parsed.map(String);
       }
+    } catch {
+      // ignore JSON parse error
+    }
+  }
 
-      const buffer = await productImage.arrayBuffer();
-      const result = await uploadToImageKit(buffer, productImage.name, '/products');
+  // Delete old images not in keptImageIds
+  const oldImages = await db
+    .select()
+    .from(productImagesSchema)
+    .where(eq(productImagesSchema.productId, id));
 
-      await db.insert(productImagesSchema).values({
-        productId: id,
-        imageUrl: result.url,
-        imageKey: result.fileId,
-        isMain: true,
-        sortOrder: 0,
-      });
+  const imagesToDelete = oldImages.filter((img) => !keptImageIds.includes(img.id));
+
+  for (const img of imagesToDelete) {
+    if (img.imageKey) {
+      try {
+        await deleteFromImageKit(img.imageKey);
+      } catch {
+        // Ignore deletion errors
+      }
+    }
+    await db.delete(productImagesSchema).where(eq(productImagesSchema.id, img.id));
+  }
+
+  const remainingImages = oldImages.filter((img) => keptImageIds.includes(img.id));
+  let hasMain = remainingImages.some((img) => img.isMain);
+  let maxSortOrder = -1;
+  for (const img of remainingImages) {
+    maxSortOrder = Math.max(maxSortOrder, img.sortOrder ?? 0);
+  }
+
+  if (remainingImages.length > 0 && !hasMain) {
+    const firstId = remainingImages[0]?.id;
+    if (firstId) {
+      await db
+        .update(productImagesSchema)
+        .set({ isMain: true })
+        .where(eq(productImagesSchema.id, firstId));
+      hasMain = true;
+    }
+  }
+
+  // Handle new images upload
+  const validFiles = productImages.filter((f): f is File => f instanceof File && f.size > 0);
+  if (validFiles.length > 0) {
+    const allowedTypes = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
+
+    for (let i = 0; i < validFiles.length; i += 1) {
+      const file = validFiles[i];
+      if (file && allowedTypes.has(file.type)) {
+        const buffer = await file.arrayBuffer();
+        const result = await uploadToImageKit(buffer, file.name, '/products');
+
+        await db.insert(productImagesSchema).values({
+          productId: id,
+          imageUrl: result.url,
+          imageKey: result.fileId,
+          isMain: !hasMain && i === 0,
+          sortOrder: maxSortOrder + 1 + i,
+        });
+      }
     }
   }
 
@@ -248,29 +309,120 @@ export async function updateProduct(id: string, formData: FormData) {
 }
 
 export async function deleteProduct(id: string) {
-  // Delete associated images from ImageKit
-  const images = await db
-    .select()
-    .from(productImagesSchema)
-    .where(eq(productImagesSchema.productId, id));
+  // Check if product exists and has orders
+  const orders = await db
+    .select({ id: orderItemsSchema.id })
+    .from(orderItemsSchema)
+    .where(eq(orderItemsSchema.productId, id))
+    .limit(1);
 
-  for (const image of images) {
-    if (image.imageKey) {
-      try {
-        await deleteFromImageKit(image.imageKey);
-      } catch {
-        // Ignore deletion errors
+  if (orders.length > 0) {
+    // Soft delete
+    await db.update(productsSchema).set({ deletedAt: new Date() }).where(eq(productsSchema.id, id));
+  } else {
+    // Delete associated images from ImageKit
+    const images = await db
+      .select()
+      .from(productImagesSchema)
+      .where(eq(productImagesSchema.productId, id));
+
+    for (const image of images) {
+      if (image.imageKey) {
+        try {
+          await deleteFromImageKit(image.imageKey);
+        } catch {
+          // Ignore deletion errors
+        }
       }
     }
+
+    // Delete variants
+    await db.delete(productVariantsSchema).where(eq(productVariantsSchema.productId, id));
+
+    // Delete images from DB
+    await db.delete(productImagesSchema).where(eq(productImagesSchema.productId, id));
+
+    // Delete product
+    await db.delete(productsSchema).where(eq(productsSchema.id, id));
   }
-
-  // Delete images from DB
-  await db.delete(productImagesSchema).where(eq(productImagesSchema.productId, id));
-
-  // Delete product
-  await db.delete(productsSchema).where(eq(productsSchema.id, id));
 
   revalidatePath('/dashboard/products');
 
   return { success: true };
+}
+
+export async function getVariantsByProductId(productId: string) {
+  const variants = await db
+    .select()
+    .from(productVariantsSchema)
+    .where(eq(productVariantsSchema.productId, productId))
+    .orderBy(productVariantsSchema.createdAt);
+
+  return variants;
+}
+
+export async function addVariant(data: VariantFormValues) {
+  const parsed = variantSchema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Input tidak valid' };
+  }
+
+  await db.insert(productVariantsSchema).values({
+    productId: parsed.data.productId,
+    size: parsed.data.size,
+    color: parsed.data.color,
+    stock: parsed.data.stock,
+    price: parsed.data.price,
+    isActive: true,
+  });
+
+  revalidatePath('/dashboard/products');
+  return { success: true };
+}
+
+export async function updateVariant(id: string, data: VariantFormValues) {
+  const parsed = variantSchema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Input tidak valid' };
+  }
+
+  await db
+    .update(productVariantsSchema)
+    .set({
+      size: parsed.data.size,
+      color: parsed.data.color,
+      stock: parsed.data.stock,
+      price: parsed.data.price,
+    })
+    .where(eq(productVariantsSchema.id, id));
+
+  revalidatePath('/dashboard/products');
+  return { success: true };
+}
+
+export async function deleteVariant(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Check if variant is referenced in order_items
+    const referenced = await db
+      .select({ id: orderItemsSchema.id })
+      .from(orderItemsSchema)
+      .where(eq(orderItemsSchema.variantId, id))
+      .limit(1);
+
+    const query =
+      referenced.length > 0
+        ? db
+            .update(productVariantsSchema)
+            .set({ isActive: false })
+            .where(eq(productVariantsSchema.id, id))
+        : db.delete(productVariantsSchema).where(eq(productVariantsSchema.id, id));
+
+    await query;
+
+    revalidatePath('/dashboard/products');
+    return { success: true };
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Gagal menghapus varian';
+    return { success: false, error: errorMessage };
+  }
 }

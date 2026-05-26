@@ -21,8 +21,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const mainImage = productData.images.find((img) => img.isMain) ?? productData.images[0];
 
   return {
-    title: `${productData.name} — ANPM`,
-    description: productData.description ?? `Beli ${productData.name} di ANPM Clothing.`,
+    title: `${productData.name} — AMPM`,
+    description: productData.description ?? `Beli ${productData.name} di AMPM Clothing.`,
     openGraph: {
       images: mainImage ? [mainImage.imageUrl] : [],
     },

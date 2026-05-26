@@ -3,7 +3,7 @@ import { SignOutButton } from '@clerk/nextjs';
 export function DashboardHeader() {
   return (
     <header className="sticky top-0 z-40 flex h-[60px] w-full items-center justify-between border-b border-hairline bg-canvas px-[16px] md:hidden">
-      <h1 className="text-[18px] font-bold tracking-tight text-ink uppercase">ANPM Admin</h1>
+      <h1 className="text-[18px] font-bold tracking-tight text-ink uppercase">AMPM Admin</h1>
 
       <SignOutButton>
         <button type="button" className="text-mute hover:text-ink">

@@ -17,16 +17,19 @@ export function ProductCard(props: ProductCardProps) {
   }).format(props.price);
 
   return (
-    <Link href={`/${props.locale}/product/${props.slug}`} className="group flex flex-col">
-      {/* Image — full-bleed on soft-cloud, no radius, no shadow */}
-      <div className="relative aspect-square w-full overflow-hidden bg-soft-cloud">
+    <Link
+      href={`/${props.locale}/product/${props.slug}`}
+      className="group card-elevated flex animate-fade-in-up flex-col"
+    >
+      {/* Image — rounded top, subtle zoom on hover */}
+      <div className="relative aspect-square w-full overflow-hidden rounded-t-[var(--radius-lg)] bg-soft-cloud">
         {props.imageUrl ? (
           <Image
             src={props.imageUrl}
             alt={props.name}
             fill
             sizes="(max-width: 600px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-[8px]">
@@ -51,10 +54,10 @@ export function ProductCard(props: ProductCardProps) {
         )}
       </div>
 
-      {/* Product info — tight spacing per DESIGN.md */}
-      <div className="flex flex-col gap-[2px] pt-[12px]">
-        <h3 className="text-body-strong leading-snug text-ink">{props.name}</h3>
-        <p className="text-body-md mt-[2px] text-ink">{formattedPrice}</p>
+      {/* Product info */}
+      <div className="flex flex-col gap-[4px] rounded-b-[var(--radius-lg)] bg-canvas p-[16px]">
+        <h3 className="text-body-strong line-clamp-1 leading-snug text-ink">{props.name}</h3>
+        <p className="text-body-md font-semibold text-primary">{formattedPrice}</p>
       </div>
     </Link>
   );

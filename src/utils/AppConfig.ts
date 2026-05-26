@@ -7,7 +7,7 @@ const localePrefix: LocalePrefixMode = 'as-needed';
 
 /** Centralized application configuration */
 export const AppConfig = {
-  name: 'ANPM',
+  name: 'AMPM',
   i18n: {
     locales: ['en'],
     defaultLocale: 'en',

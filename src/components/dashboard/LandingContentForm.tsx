@@ -1,7 +1,13 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import type * as z from 'zod';
 import { updateLandingContent } from '@/actions/landingContent';
+import { landingContentSchema } from '@/validations/schemas';
+
+type LandingContentValues = z.infer<typeof landingContentSchema>;
 
 type Props = {
   initialData: {
@@ -16,12 +22,27 @@ type Props = {
 };
 
 export function LandingContentForm(props: Props) {
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     props.initialData.heroImageUrl ?? null,
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LandingContentValues>({
+    resolver: zodResolver(landingContentSchema),
+    defaultValues: {
+      heroTitle: props.initialData.heroTitle ?? '',
+      heroSubtitle: props.initialData.heroSubtitle ?? '',
+      ctaText: props.initialData.ctaText ?? '',
+      ctaLink: props.initialData.ctaLink ?? '',
+      announcementText: props.initialData.announcementText ?? '',
+      instagramUrl: props.initialData.instagramUrl ?? '',
+    },
+  });
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -31,12 +52,25 @@ export function LandingContentForm(props: Props) {
     }
   }
 
-  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
+  async function onSubmit(data: LandingContentValues) {
     setMessage(null);
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData();
+    formData.set('heroTitle', data.heroTitle);
+    formData.set('heroSubtitle', data.heroSubtitle ?? '');
+    formData.set('ctaText', data.ctaText);
+    formData.set('ctaLink', data.ctaLink);
+    formData.set('announcementText', data.announcementText ?? '');
+    formData.set('instagramUrl', data.instagramUrl ?? '');
+
+    // Append file if selected
+    if (fileInputRef.current?.files?.[0]) {
+      formData.set('heroImage', fileInputRef.current.files[0]);
+    } else if (previewUrl === null) {
+      // Indicates image was removed
+      formData.set('removeHeroImage', 'true');
+    }
+
     const result = await updateLandingContent(formData);
 
     if (result.success) {
@@ -47,16 +81,17 @@ export function LandingContentForm(props: Props) {
         text: result.error ?? 'Gagal menyimpan konten.',
       });
     }
-
-    setLoading(false);
   }
 
-  const inputClass =
-    'h-[48px] w-full bg-soft-cloud px-[16px] text-[15px] text-ink outline-none placeholder:text-stone focus:ring-2 focus:ring-ink';
+  function inputClass(fieldName?: keyof LandingContentValues) {
+    const hasError = fieldName && errors[fieldName];
+    return `h-[48px] w-full bg-soft-cloud px-[16px] text-[15px] text-ink outline-none placeholder:text-stone focus:ring-2 ${hasError ? 'ring-2 ring-sale' : 'focus:ring-ink'}`;
+  }
 
   return (
     <form
-      onSubmit={handleSubmit}
+      noValidate
+      onSubmit={handleSubmit(onSubmit)}
       className="flex flex-col gap-[24px] bg-canvas p-[32px]"
       style={{ border: '1px solid var(--color-hairline-soft)' }}
     >
@@ -121,16 +156,18 @@ export function LandingContentForm(props: Props) {
 
       <div className="flex flex-col gap-[8px]">
         <label htmlFor="heroTitle" className="text-caption-md text-ink">
-          Hero Title
+          Hero Title <span className="text-sale">*</span>
         </label>
         <input
           id="heroTitle"
-          name="heroTitle"
+          {...register('heroTitle')}
           type="text"
-          defaultValue={props.initialData.heroTitle}
-          required
-          className={inputClass}
+          className={inputClass('heroTitle')}
+          disabled={isSubmitting}
         />
+        {errors.heroTitle && (
+          <p className="text-caption-sm text-sale">{errors.heroTitle.message}</p>
+        )}
       </div>
 
       <div className="flex flex-col gap-[8px]">
@@ -139,39 +176,39 @@ export function LandingContentForm(props: Props) {
         </label>
         <input
           id="heroSubtitle"
-          name="heroSubtitle"
+          {...register('heroSubtitle')}
           type="text"
-          defaultValue={props.initialData.heroSubtitle}
-          className={inputClass}
+          className={inputClass()}
+          disabled={isSubmitting}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-[24px] md:grid-cols-2">
         <div className="flex flex-col gap-[8px]">
           <label htmlFor="ctaText" className="text-caption-md text-ink">
-            CTA Text
+            CTA Text <span className="text-sale">*</span>
           </label>
           <input
             id="ctaText"
-            name="ctaText"
+            {...register('ctaText')}
             type="text"
-            defaultValue={props.initialData.ctaText}
-            required
-            className={inputClass}
+            className={inputClass('ctaText')}
+            disabled={isSubmitting}
           />
+          {errors.ctaText && <p className="text-caption-sm text-sale">{errors.ctaText.message}</p>}
         </div>
         <div className="flex flex-col gap-[8px]">
           <label htmlFor="ctaLink" className="text-caption-md text-ink">
-            CTA Link
+            CTA Link <span className="text-sale">*</span>
           </label>
           <input
             id="ctaLink"
-            name="ctaLink"
+            {...register('ctaLink')}
             type="text"
-            defaultValue={props.initialData.ctaLink}
-            required
-            className={inputClass}
+            className={inputClass('ctaLink')}
+            disabled={isSubmitting}
           />
+          {errors.ctaLink && <p className="text-caption-sm text-sale">{errors.ctaLink.message}</p>}
         </div>
       </div>
 
@@ -181,10 +218,10 @@ export function LandingContentForm(props: Props) {
         </label>
         <input
           id="announcementText"
-          name="announcementText"
+          {...register('announcementText')}
           type="text"
-          defaultValue={props.initialData.announcementText}
-          className={inputClass}
+          className={inputClass()}
+          disabled={isSubmitting}
         />
       </div>
 
@@ -194,19 +231,19 @@ export function LandingContentForm(props: Props) {
         </label>
         <input
           id="instagramUrl"
-          name="instagramUrl"
+          {...register('instagramUrl')}
           type="text"
-          defaultValue={props.initialData.instagramUrl}
-          className={inputClass}
+          className={inputClass()}
+          disabled={isSubmitting}
         />
       </div>
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={isSubmitting}
         className="button-primary mt-[16px] self-start px-[32px] disabled:opacity-50"
       >
-        {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
+        {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
       </button>
     </form>
   );

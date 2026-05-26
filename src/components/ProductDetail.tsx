@@ -1,8 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState, useRef, useEffect } from 'react';
+import { toast } from 'sonner';
 import { OrderConfirmation } from './OrderConfirmation';
 import { OrderForm } from './OrderForm';
 
@@ -18,6 +19,7 @@ type ProductVariant = {
   size: string;
   color: string | null;
   stock: number;
+  price?: number | null;
 };
 
 type Product = {
@@ -42,23 +44,70 @@ type ImageGalleryProps = {
 };
 
 function ImageGallery(props: ImageGalleryProps) {
-  const mainImage = props.images[props.activeImageIndex] ?? props.images[0];
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Mencegah trigger onScroll saat programmatically scrolling
+  const isProgrammaticScroll = useRef(false);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      isProgrammaticScroll.current = true;
+      const width = scrollRef.current.clientWidth;
+      scrollRef.current.scrollTo({
+        left: width * props.activeImageIndex,
+        behavior: 'smooth',
+      });
+      // Reset flag setelah scroll animasi selesai (estimasi 300ms)
+      setTimeout(() => {
+        isProgrammaticScroll.current = false;
+      }, 300);
+    }
+  }, [props.activeImageIndex]);
 
   return (
-    <div className="flex w-full flex-col gap-[12px] md:w-[55%] md:flex-row-reverse">
-      {/* Main Image */}
-      <div className="relative aspect-square w-full flex-1 overflow-hidden bg-soft-cloud">
-        {mainImage ? (
-          <Image
-            src={mainImage.imageUrl}
-            alt={mainImage.altText ?? props.productName}
-            fill
-            sizes="(max-width: 768px) 100vw, 55vw"
-            className="object-cover"
-            priority
-          />
+    <div className="flex w-full flex-col gap-[16px] md:w-[55%] md:flex-row-reverse">
+      {/* Main Image Slider */}
+      <div
+        ref={scrollRef}
+        className="relative flex aspect-square w-full flex-1 animate-fade-in-up snap-x snap-mandatory overflow-x-auto overflow-y-hidden rounded-[var(--radius-xl)] bg-soft-cloud shadow-sm"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        onScroll={(e) => {
+          if (isProgrammaticScroll.current) {
+            return;
+          }
+          const { currentTarget: target } = e;
+          if (!(target instanceof HTMLDivElement)) {
+            return;
+          }
+          const index = Math.round(target.scrollLeft / target.clientWidth);
+          if (
+            index !== props.activeImageIndex &&
+            !Number.isNaN(index) &&
+            index >= 0 &&
+            index < props.images.length
+          ) {
+            props.onActiveImageChange(index);
+          }
+        }}
+      >
+        {props.images.length > 0 ? (
+          props.images.map((img, index) => (
+            <div
+              key={img.id}
+              className="relative flex aspect-square w-full shrink-0 snap-center items-center justify-center"
+            >
+              <Image
+                src={img.imageUrl}
+                alt={img.altText ?? props.productName}
+                fill
+                sizes="(max-width: 768px) 100vw, 55vw"
+                className="object-cover"
+                priority={index === 0}
+              />
+            </div>
+          ))
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-mute">
+          <div className="flex h-full w-full shrink-0 items-center justify-center text-mute">
             Belum ada foto
           </div>
         )}
@@ -66,7 +115,10 @@ function ImageGallery(props: ImageGalleryProps) {
 
       {/* Thumbnail Rail */}
       {props.images.length > 1 && (
-        <div className="flex w-full shrink-0 flex-row gap-[8px] overflow-x-auto md:w-[72px] md:flex-col md:overflow-y-auto">
+        <div
+          className="flex w-full shrink-0 animate-fade-in-up flex-row gap-[12px] overflow-x-auto pb-2 md:w-[80px] md:flex-col md:overflow-y-auto md:pb-0"
+          style={{ animationDelay: '100ms' }}
+        >
           {props.images.map((img, index) => (
             <button
               key={img.id}
@@ -74,7 +126,7 @@ function ImageGallery(props: ImageGalleryProps) {
               onClick={() => {
                 props.onActiveImageChange(index);
               }}
-              className={`relative aspect-square w-[72px] shrink-0 overflow-hidden bg-soft-cloud transition-opacity ${props.activeImageIndex === index ? 'ring-2 ring-ink ring-offset-2' : 'opacity-60 hover:opacity-100'}`}
+              className={`relative aspect-square w-[72px] shrink-0 overflow-hidden rounded-[var(--radius-md)] bg-soft-cloud transition-all duration-300 ${props.activeImageIndex === index ? 'shadow-md ring-2 ring-primary ring-offset-2' : 'opacity-60 hover:scale-105 hover:opacity-100'}`}
             >
               <Image
                 src={img.imageUrl}
@@ -170,6 +222,7 @@ function QuantitySelector(props: QuantitySelectorProps) {
 }
 
 export function ProductDetail(props: Props) {
+  const router = useRouter();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -188,11 +241,12 @@ export function ProductDetail(props: Props) {
   const hasVariants = props.variants.length > 0;
   const uniqueSizes = [...new Set(props.variants.map((v) => v.size))];
 
+  const currentPrice = selectedVariant?.price ?? props.product.price;
   const formattedPrice = new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
-  }).format(props.product.price);
+  }).format(currentPrice);
 
   function handleSizeSelect(size: string) {
     const variantMatch = props.variants.find((v) => v.size === size && v.stock > 0);
@@ -232,53 +286,78 @@ export function ProductDetail(props: Props) {
 
       {/* ── RIGHT: Product Info ── */}
       <div className="flex w-full flex-col md:w-[45%] md:py-[8px]">
-        {/* Breadcrumb */}
-        <nav className="text-caption-md mb-[20px] text-mute">
-          <Link href="/" className="transition-colors hover:text-ink">
-            Beranda
-          </Link>
-          <span className="mx-[8px]">/</span>
-          <Link href="/#products" className="transition-colors hover:text-ink">
-            Produk
-          </Link>
-          <span className="mx-[8px]">/</span>
-          <span className="text-ink">{props.product.name}</span>
-        </nav>
+        <button
+          type="button"
+          onClick={() => {
+            router.back();
+          }}
+          className="text-caption-md mb-[20px] flex items-center gap-[4px] self-start text-mute transition-colors hover:text-ink"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Kembali
+        </button>
 
-        <h1 className="text-heading-xl text-ink">{props.product.name}</h1>
-        <p className="text-heading-lg mt-[8px] text-ink">{formattedPrice}</p>
+        <h1
+          className="text-heading-xl animate-fade-in-up leading-tight text-ink"
+          style={{ animationDelay: '100ms' }}
+        >
+          {props.product.name}
+        </h1>
+        <p
+          className="text-heading-lg mt-[12px] animate-fade-in-up font-semibold text-primary"
+          style={{ animationDelay: '150ms' }}
+        >
+          {formattedPrice}
+        </p>
 
         {/* Divider */}
         <div className="my-[24px] h-px w-full bg-hairline-soft" />
 
         {/* Size Selector */}
         {hasVariants && (
-          <SizeSelector
-            uniqueSizes={uniqueSizes}
-            selectedVariant={selectedVariant}
-            variants={props.variants}
-            onSelect={handleSizeSelect}
-          />
+          <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+            <SizeSelector
+              uniqueSizes={uniqueSizes}
+              selectedVariant={selectedVariant}
+              variants={props.variants}
+              onSelect={handleSizeSelect}
+            />
+          </div>
         )}
 
         {/* Quantity */}
-        <QuantitySelector
-          quantity={quantity}
-          minDisabled={quantity <= 1 || (hasVariants && !selectedVariant)}
-          maxDisabled={isQtyPlusDisabled || (hasVariants && !selectedVariant)}
-          onChange={handleQuantityChange}
-        />
+        <div className="animate-fade-in-up" style={{ animationDelay: '250ms' }}>
+          <QuantitySelector
+            quantity={quantity}
+            minDisabled={quantity <= 1 || (hasVariants && !selectedVariant)}
+            maxDisabled={isQtyPlusDisabled || (hasVariants && !selectedVariant)}
+            onChange={handleQuantityChange}
+          />
+        </div>
 
         {/* CTA Flow */}
-        <div className="mb-[40px]">
+        <div className="mb-[40px] animate-fade-in-up" style={{ animationDelay: '300ms' }}>
           {orderStep === 'idle' && (
             <button
               type="button"
-              disabled={hasVariants && !selectedVariantId}
               onClick={() => {
+                if (hasVariants && !selectedVariantId) {
+                  toast.error('Silakan pilih ukuran varian terlebih dahulu.');
+                  return;
+                }
                 setOrderStep('form');
               }}
-              className="button-primary flex w-full cursor-pointer items-center justify-center disabled:cursor-not-allowed disabled:opacity-50"
+              className="button-primary flex w-full cursor-pointer items-center justify-center shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
             >
               Pesan Sekarang
             </button>
